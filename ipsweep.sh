@@ -23,7 +23,7 @@ do
 			echo "${i}.${ip}" >> ipSweepOutput.txt
 			echo "${BOLD}${i}.${ip}${resetStyle} is ${BLUE}Window${resetStyle} & ${GREEN}live${resetStyle}"
 		fi
-	elif [ "${1}" != "" ]
+	elif [ "${1}" != "" ] && [[ "${1}" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || echo -e "usage: run without an argument or with first three octets.\n${scriptName} 10.10.10\n${scriptName} 192.168.1"; echo ''; break
 	then
 		os="$(ping -c 1 $1.${ip} | grep -e 'ttl=64'|cut -d ' ' -f6)"
 		if [ "${os}" = "ttl=64" ]

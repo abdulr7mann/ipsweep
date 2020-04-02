@@ -1,5 +1,6 @@
 #!/bin/bash
 # By @abdulr7man
+BLUE='\e[1;34m'
 RED='\e[1;91m'
 GREEN='\e[32m'
 BOLD='\e[1m'
@@ -40,7 +41,7 @@ do
 	if [ "${1}" = "" ]
 	then
 		i="$(ifconfig | grep "inet "|sed 'q1'|cut -d' ' -f10|cut -d'.' -f1-3)"
-		os="$(ping -c 1 ${i}.${ip} | grep -e 'ttl=64'|cut -d ' ' -f6)"
+		os="$(ping -c 1 $i.${ip} | grep -e 'ttl='|cut -d ' ' -f6|grep -oP 'ttl=\K[^ ]+')"
 		if [ "${os}" = "ttl=64" ]
 		then
 			echo "${i}.${ip}" >> ipSweepOutput.txt
@@ -48,19 +49,19 @@ do
 		elif [ "${os}" = "ttl=128" ]
 		then
 			echo "${i}.${ip}" >> ipSweepOutput.txt
-			echo "${BOLD}${i}.${ip}${resetStyle} is ${BLUE}Window${resetStyle} & ${GREEN}live${resetStyle}"
+			echo -e "${BOLD}${i}.${ip}${resetStyle} is ${BLUE}Window${resetStyle} & ${GREEN}live${resetStyle}"
 		fi
 	elif [ "${1}" != "" ]
 	then
-		os="$(ping -c 1 $1.${ip} | grep -e 'ttl=64'|cut -d ' ' -f6)"
-		if [ "${os}" = "ttl=64" ]
+		os="$(ping -c 1 $1.${ip} | grep -e 'ttl='|cut -d ' ' -f6|grep -oP 'ttl=\K[^ ]+')"
+		if [ "${os}" = "64" ]
 		then
 			echo "${1}.${ip}" >> ipSweepOutput.txt
 			echo -e "${BOLD}$1.${ip}${resetStyle} is ${RED}Linux${resetStyle} & ${GREEN}live${resetStyle}"
-		elif [ "${os}" = "ttl=128" ]
+		elif [ "${os}" = "128" ]
 		then
 			echo "${1}.${ip}" >> ipSweepOutput.txt
-			echo "${BOLD}$1.${ip}${resetStyle} is ${BLUE}Window${resetStyle} & ${GREEN}live${resetStyle}"
+			echo -e "${BOLD}$1.${ip}${resetStyle} is ${BLUE}Window${resetStyle} & ${GREEN}live${resetStyle}"
 		fi
 	fi
 done

@@ -1,5 +1,4 @@
 #!/bin/bash
-# By @abdulr7man
 BLUE='\e[1;34m'
 RED='\e[1;91m'
 GREEN='\e[32m'
@@ -40,13 +39,13 @@ for ip in {1..254}
 do
 	if [ "${1}" = "" ]
 	then
-		i="$(ifconfig | grep "inet "|sed 'q1'|cut -d' ' -f10|cut -d'.' -f1-3)"
+		i="$(hostname -I|cut -d'.' -f1-3)"
 		os="$(ping -c 1 $i.${ip} | grep -e 'ttl='|cut -d ' ' -f6|grep -oP 'ttl=\K[^ ]+')"
-		if [ "${os}" = "ttl=64" ]
+		if [ "${os}" = "64" ]
 		then
 			echo "${i}.${ip}" >> ipSweepOutput.txt
 			echo -e "${BOLD}${i}.${ip}${resetStyle} is ${RED}Linux${resetStyle} & ${GREEN}live${resetStyle}"
-		elif [ "${os}" = "ttl=128" ]
+		elif [ "${os}" = "128" ]
 		then
 			echo "${i}.${ip}" >> ipSweepOutput.txt
 			echo -e "${BOLD}${i}.${ip}${resetStyle} is ${BLUE}Window${resetStyle} & ${GREEN}live${resetStyle}"

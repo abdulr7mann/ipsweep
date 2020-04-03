@@ -27,44 +27,64 @@ then
     then
         stat='good'
     else
-        echo -e "Invalid IP: ${1} \nusage: run without an argument or with first three octets.\n${scriptName} 10.10.10\n${scriptName} 192.168.1"
+        echo -e "Invalid IP: ${1} \nusage: run without an argument or with first three octets.\n./${scriptName} 10.10.10\n./${scriptName} 192.168.1"
         exit
     fi
 fi
-if [ -f ipSweepOutput.txt ]
+if [ -f iplist.txt ]
 then
-	rm ipSweepOutput.txt >/dev/null
+	rm iplist.txt >/dev/null
 fi
+i="$(hostname -I|cut -d'.' -f1-3)"
+interface="$(ifconfig | grep -v 'lo' | grep ': '|sed 'q1' |cut -d':' -f1)"
 for ip in {1..254}
 do
 	if [ "${1}" = "" ]
 	then
-		i="$(hostname -I|cut -d'.' -f1-3)"
-		os="$(ping -c 1 $i.${ip} | grep -e 'ttl='|cut -d ' ' -f6|grep -oP 'ttl=\K[^ ]+')"
+		ping -c 1 $i.${ip} > ping${ip}.txt && cat ping${ip}.txt|grep -oP 'ttl=\K[^ ]+' >> os.txt && cat ping${ip}.txt|grep "64 bytes" | cut -d " " -f 4 | tr -d ":" >> ip.txt &
+		arping -I ${interface} -c 1 $i.${ip} |grep -oP 'y from \K[^ ]+' >> arping.txt &
+	elif [ "${1}" != "" ]
+	then
+		ping -c 1 $1.${ip} > ping${ip}.txt && cat ping${ip}.txt|grep -oP 'ttl=\K[^ ]+' >> os.txt && cat ping${ip}.txt|grep "64 bytes" | cut -d " " -f 4 | tr -d ":" >> ip.txt &
+		arping -I ${interface} -c 1 $i.${ip} |grep -oP 'y from \K[^ ]+' >> arping.txt &
+	fi
+done
+wait
+while read os <&4 && read ip <&3
+do
+	if [ "${1}" = "" ]
+	then
 		if [ "${os}" = "64" ]
 		then
-			echo "${i}.${ip}" >> ipSweepOutput.txt
-			echo -e "${BOLD}${i}.${ip}${resetStyle} is ${RED}Linux${resetStyle} & ${GREEN}live${resetStyle}"
+			echo "${ip}" >> iplist.txt
+			echo -e "${BOLD}${ip}${resetStyle} ${GREEN}live${resetStyle} ${RED}Linux${resetStyle}"
 		elif [ "${os}" = "128" ]
 		then
-			echo "${i}.${ip}" >> ipSweepOutput.txt
-			echo -e "${BOLD}${i}.${ip}${resetStyle} is ${BLUE}Window${resetStyle} & ${GREEN}live${resetStyle}"
+			echo "${ip}" >> iplist.txt
+			echo -e "${BOLD}${ip}${resetStyle} ${GREEN}live${resetStyle} ${BLUE}Window${resetStyle}"
 		fi
 	elif [ "${1}" != "" ]
 	then
-		os="$(ping -c 1 $1.${ip} | grep -e 'ttl='|cut -d ' ' -f6|grep -oP 'ttl=\K[^ ]+')"
 		if [ "${os}" = "64" ]
 		then
-			echo "${1}.${ip}" >> ipSweepOutput.txt
-			echo -e "${BOLD}$1.${ip}${resetStyle} is ${RED}Linux${resetStyle} & ${GREEN}live${resetStyle}"
+			echo "${ip}" >> iplist.txt
+			echo -e "${BOLD}${ip}${resetStyle} ${GREEN}live${resetStyle} ${RED}Linux${resetStyle}"
 		elif [ "${os}" = "128" ]
 		then
-			echo "${1}.${ip}" >> ipSweepOutput.txt
-			echo -e "${BOLD}$1.${ip}${resetStyle} is ${BLUE}Window${resetStyle} & ${GREEN}live${resetStyle}"
+			echo "${ip}" >> iplist.txt
+			echo -e "${BOLD}${ip}${resetStyle} ${GREEN}live${resetStyle} ${BLUE}Window${resetStyle}"
 		fi
 	fi
-done
-if [ -f ipSweepOutput.txt ]
-then
-	echo 'Output -> ipSweepOutput.txt'
-fi
+done 4<os.txt 3<ip.txt
+grep -vf iplist.txt arping.txt > a.txt
+while read arp
+do
+	echo "${arp}" >> iplist.txt
+	echo -e "${BOLD}${arp}${resetStyle} ${GREEN}alive${resetStyle}"
+done <a.txt
+echo 'Output -> iplist.txt'
+rm os.txt >/dev/null
+rm ping*.txt >/dev/null
+rm arping*.txt >/dev/null
+rm ip.txt >/dev/null
+rm a.txt >/dev/null

@@ -35,6 +35,11 @@ if [ -f iplist.txt ]
 then
 	rm iplist.txt >/dev/null
 fi
+if [ "$EUID" -ne 0 ]
+then
+	echo -e "Please run as root\nsudo ./${scriptName} 10.10.10"
+	exit
+fi
 i="$(hostname -I|cut -d'.' -f1-3)"
 interface="$(ifconfig | grep -v 'lo' | grep ': '|sed 'q1' |cut -d':' -f1)"
 for ip in {1..254}
@@ -73,6 +78,10 @@ do
 		then
 			echo "${ip}" >> iplist.txt
 			echo -e "${BOLD}${ip}${resetStyle} ${GREEN}live${resetStyle} ${BLUE}Window${resetStyle}"
+		elif [ "${os}" = "256" ] || [ "${os}" = "255" ] || [ "${os}" = "254" ]
+		then
+			echo "${ip}" >> iplist.txt
+			echo -e "${BOLD}${ip}${resetStyle} ${GREEN}live${resetStyle} ${RED}OpenBSD/Cisco/Oracle${resetStyle}"
 		fi
 	fi
 done 4<os.txt 3<ip.txt
@@ -82,6 +91,7 @@ do
 	echo "${arp}" >> iplist.txt
 	echo -e "${BOLD}${arp}${resetStyle} ${GREEN}alive${resetStyle}"
 done <a.txt
+chmod 666 iplist.txt
 echo 'Output -> iplist.txt'
 rm os.txt >/dev/null
 rm ping*.txt >/dev/null
